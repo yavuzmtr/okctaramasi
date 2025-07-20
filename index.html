@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OKC Fiş Okuyucu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .camera-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .camera-button {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+            transition: transform 0.2s;
+        }
+        
+        .camera-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .camera-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            display: none;
+        }
+        
+        .results h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .results h3:before {
+            content: "📄";
+            margin-right: 8px;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .result-item strong {
+            color: #333;
+        }
+        
+        .result-item span {
+            color: #666;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            border: 2px dashed #ccc;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #e0e0e0;
+            border-color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 OKC Fiş Okuyucu</h1>
+            <p>Fişinizi fotoğraflayın, bilgileri otomatik çıkarın</p>
+        </div>
+        
+        <div class="content">
+            <div class="camera-section">
+                <button class="camera-button" onclick="takePhoto()">📸 Fiş Fotoğrafla</button>
+                <label for="fileInput" class="file-input-label">
+                    📁 Galeriden Seç
+                </label>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+                <img id="imagePreview" alt="Fiş Önizlemesi">
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Fiş okunuyor...</p>
+            </div>
+            
+            <div class="results" id="results">
+                <h3>Çıkarılan Bilgiler</h3>
+                <div id="extractedData"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        
+        async function takePhoto() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    setTimeout(() => {
+                        ctx.drawImage(video, 0, 0);
+                        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        displayImage(imageData);
+                        processImage(imageData);
+                    }, 2000);
+                };
+            } catch (error) {
+                alert('Kamera erişimi sağlanamadı. Lütfen galeriden resim seçin.');
+            }
+        }
+        
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = e.target.result;
+                    displayImage(imageData);
+                    processImage(imageData);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function displayImage(imageData) {
+            const preview = document.getElementById('imagePreview');
+            preview.src = imageData;
+            preview.style.display = 'block';
+            currentImage = imageData;
+        }
+        
+        async function processImage(imageData) {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            try {
+                const result = await Tesseract.recognize(imageData, 'tur', {
+                    logger: m => console.log(m)
+                });
+                
+                const extractedText = result.data.text;
+                const extractedInfo = extractReceiptInfo(extractedText);
+                
+                displayResults(extractedInfo, extractedText);
+                
+            } catch (error) {
+                alert('Fiş okunamadı. Lütfen daha net bir fotoğraf çekin.');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function extractReceiptInfo(text) {
+            const info = {};
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // Tarih arama
+            const dateRegex = /(\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4})/;
+            const dateMatch = text.match(dateRegex);
+            if (dateMatch) {
+                info.tarih = dateMatch[1];
+            }
+            
+            // Toplam tutar arama
+            const totalRegex = /(?:toplam|total|tutar|ara toplam|genel toplam)[\s:]*([0-9]+[,\.]\d{2})/i;
+            const totalMatch = text.match(totalRegex);
+            if (totalMatch) {
+                info.toplam = totalMatch[1] + ' TL';
+            }
+            
+            // KDV arama
+            const kdvRegex = /(?:kdv|kalan|vergi)[\s:]*([0-9]+[,\.]\d{2})/i;
+            const kdvMatch = text.match(kdvRegex);
+            if (kdvMatch) {
+                info.kdv = kdvMatch[1] + ' TL';
+            }
+            
+            // Vergi numarası arama
+            const taxRegex = /(?:vergi no|vkn|v\.k\.n)[\s:]*(\d{10,11})/i;
+            const taxMatch = text.match(taxRegex);
+            if (taxMatch) {
+                info.vergiNo = taxMatch[1];
+            }
+            
+            // İşletme adı (genellikle ilk satırlarda)
+            if (lines.length > 0) {
+                info.isletme = lines[0];
+            }
+            
+            return info;
+        }
+        
+        function displayResults(info, fullText) {
+            const results = document.getElementById('results');
+            const dataDiv = document.getElementById('extractedData');
+            
+            let html = '';
+            
+            if (info.isletme) {
+                html += `<div class="result-item"><strong>İşletme:</strong> <span>${info.isletme}</span></div>`;
+            }
+            
+            if (info.tarih) {
+                html += `<div class="result-item"><strong>Tarih:</strong> <span>${info.tarih}</span></div>`;
+            }
+            
+            if (info.toplam) {
+                html += `<div class="result-item"><strong>Toplam Tutar:</strong> <span>${info.toplam}</span></div>`;
+            }
+            
+            if (info.kdv) {
+                html += `<div class="result-item"><strong>KDV:</strong> <span>${info.kdv}</span></div>`;
+            }
+            
+            if (info.vergiNo) {
+                html += `<div class="result-item"><strong>Vergi No:</strong> <span>${info.vergiNo}</span></div>`;
+            }
+            
+            if (html === '') {
+                html = '<div class="result-item">Fiş bilgileri net okunamadı. Lütfen daha iyi ışıklandırılmış ve net bir fotoğraf çekin.</div>';
+            }
+            
+            dataDiv.innerHTML = html;
+            results.style.display = 'block';
+        }
+        
+        // PWA için service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript,console.log("SW loaded")');
+        }
+    </script>
+</body>
+</html>

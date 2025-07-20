@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OKC Fiş Okuyucu</title>
+    <title>OKC Fiş Okuyucu Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -16,11 +17,11 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
         
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -31,39 +32,39 @@
         .header {
             background: linear-gradient(45deg, #2196F3, #21CBF3);
             color: white;
-            padding: 30px 20px;
+            padding: 25px 20px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 24px;
+            font-size: 22px;
             margin-bottom: 5px;
         }
         
         .header p {
             opacity: 0.9;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .content {
-            padding: 30px 20px;
+            padding: 25px 20px;
         }
         
         .camera-section {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         
         .camera-button {
             background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 25px;
             border-radius: 50px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin: 5px;
             box-shadow: 0 4px 15px rgba(255,107,107,0.3);
             transition: transform 0.2s;
         }
@@ -93,10 +94,10 @@
         }
         
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2196F3;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2196F3;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
@@ -119,6 +120,7 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
+            font-size: 16px;
         }
         
         .results h3:before {
@@ -128,18 +130,33 @@
         
         .result-item {
             background: white;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #2196F3;
+            font-size: 13px;
         }
         
         .result-item strong {
             color: #333;
+            display: block;
+            margin-bottom: 2px;
         }
         
         .result-item span {
             color: #666;
+        }
+        
+        .products-section {
+            margin-top: 15px;
+        }
+        
+        .product-item {
+            background: #e8f4fd;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 12px;
         }
         
         input[type="file"] {
@@ -147,16 +164,15 @@
         }
         
         .file-input-label {
-            display: block;
+            display: inline-block;
             background: #f0f0f0;
             color: #666;
             padding: 10px 20px;
             border-radius: 25px;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
-            text-align: center;
             border: 2px dashed #ccc;
-            margin-top: 10px;
+            margin: 5px;
             transition: all 0.3s;
         }
         
@@ -164,18 +180,109 @@
             background: #e0e0e0;
             border-color: #999;
         }
+        
+        .action-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .excel-button {
+            background: linear-gradient(45deg, #4CAF50, #66BB6A);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 3px 10px rgba(76,175,80,0.3);
+        }
+        
+        .save-button {
+            background: linear-gradient(45deg, #FF9800, #FFB74D);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 3px 10px rgba(255,152,0,0.3);
+        }
+        
+        .history-section {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .history-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .filter-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #fff;
+            border-radius: 10px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        
+        .filter-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .stats-section {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📱 OKC Fiş Okuyucu</h1>
-            <p>Fişinizi fotoğraflayın, bilgileri otomatik çıkarın</p>
+            <h1>📱 OKC Fiş Okuyucu Pro</h1>
+            <p>Fişlerinizi tarayın • Excel'e aktarın • Analiz edin</p>
         </div>
         
         <div class="content">
             <div class="camera-section">
                 <button class="camera-button" onclick="takePhoto()">📸 Fiş Fotoğrafla</button>
+                <button class="camera-button" onclick="showHistory()" style="background: linear-gradient(45deg, #9C27B0, #BA68C8);">📋 Geçmiş</button>
+                <br>
                 <label for="fileInput" class="file-input-label">
                     📁 Galeriden Seç
                 </label>
@@ -185,18 +292,41 @@
             
             <div class="loading" id="loading">
                 <div class="loading-spinner"></div>
-                <p>Fiş okunuyor...</p>
+                <p>Fiş analiz ediliyor...</p>
             </div>
             
             <div class="results" id="results">
                 <h3>Çıkarılan Bilgiler</h3>
                 <div id="extractedData"></div>
+                <div class="action-buttons">
+                    <button class="save-button" onclick="saveReceipt()">💾 Kaydet</button>
+                    <button class="excel-button" onclick="exportToExcel()">📊 Excel İndir</button>
+                </div>
+            </div>
+            
+            <div class="history-section" id="historySection">
+                <h3>Kaydedilen Fişler</h3>
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <input type="date" class="filter-input" id="startDate" placeholder="Başlangıç">
+                        <input type="date" class="filter-input" id="endDate" placeholder="Bitiş">
+                    </div>
+                    <div class="filter-row">
+                        <button class="camera-button" onclick="filterReceipts()" style="font-size: 11px; padding: 8px 15px;">🔍 Filtrele</button>
+                        <button class="excel-button" onclick="exportAllToExcel()" style="font-size: 11px; padding: 8px 15px;">📊 Tümünü Export</button>
+                    </div>
+                </div>
+                <div class="stats-section" id="statsSection">
+                    <div id="statsData"></div>
+                </div>
+                <div class="history-list" id="historyList"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let currentImage = null;
+        let currentReceipt = null;
+        let savedReceipts = JSON.parse(localStorage.getItem('okcReceipts') || '[]');
         
         async function takePhoto() {
             try {
@@ -247,7 +377,7 @@
             const preview = document.getElementById('imagePreview');
             preview.src = imageData;
             preview.style.display = 'block';
-            currentImage = imageData;
+            document.getElementById('historySection').style.display = 'none';
         }
         
         async function processImage(imageData) {
@@ -263,9 +393,9 @@
                 });
                 
                 const extractedText = result.data.text;
-                const extractedInfo = extractReceiptInfo(extractedText);
+                currentReceipt = extractReceiptInfo(extractedText, imageData);
                 
-                displayResults(extractedInfo, extractedText);
+                displayResults(currentReceipt);
                 
             } catch (error) {
                 alert('Fiş okunamadı. Lütfen daha net bir fotoğraf çekin.');
@@ -274,70 +404,137 @@
             }
         }
         
-        function extractReceiptInfo(text) {
-            const info = {};
+        function extractReceiptInfo(text, imageData) {
+            const info = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                image: imageData,
+                fullText: text,
+                products: []
+            };
+            
             const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
             
-            // Tarih arama
-            const dateRegex = /(\d{1,2}[\.\/]\d{1,2}[\.\/]\d{2,4})/;
-            const dateMatch = text.match(dateRegex);
-            if (dateMatch) {
-                info.tarih = dateMatch[1];
+            // İşletme adı (genellikle ilk satırlarda)
+            for (let i = 0; i < Math.min(3, lines.length); i++) {
+                if (lines[i].length > 5 && !lines[i].match(/^\d/)) {
+                    info.isletmeAdi = lines[i];
+                    break;
+                }
             }
             
-            // Toplam tutar arama
-            const totalRegex = /(?:toplam|total|tutar|ara toplam|genel toplam)[\s:]*([0-9]+[,\.]\d{2})/i;
-            const totalMatch = text.match(totalRegex);
-            if (totalMatch) {
-                info.toplam = totalMatch[1] + ' TL';
+            // Tarih arama (daha kapsamlı)
+            const dateRegex = /(\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4})/g;
+            const dateMatches = text.match(dateRegex);
+            if (dateMatches) {
+                info.fisTargihi = dateMatches[0];
             }
             
-            // KDV arama
-            const kdvRegex = /(?:kdv|kalan|vergi)[\s:]*([0-9]+[,\.]\d{2})/i;
-            const kdvMatch = text.match(kdvRegex);
-            if (kdvMatch) {
-                info.kdv = kdvMatch[1] + ' TL';
+            // Fiş numarası
+            const receiptNoRegex = /(?:fiş|makbuz|no|seri)[\s\:]*([A-Z0-9\-\/]+)/i;
+            const receiptMatch = text.match(receiptNoRegex);
+            if (receiptMatch) {
+                info.fisNumarasi = receiptMatch[1];
             }
             
-            // Vergi numarası arama
-            const taxRegex = /(?:vergi no|vkn|v\.k\.n)[\s:]*(\d{10,11})/i;
+            // Vergi numarası
+            const taxRegex = /(?:vergi no|vkn|v\.k\.n|vergi numarası)[\s\:]*(\d{10,11})/i;
             const taxMatch = text.match(taxRegex);
             if (taxMatch) {
                 info.vergiNo = taxMatch[1];
             }
             
-            // İşletme adı (genellikle ilk satırlarda)
-            if (lines.length > 0) {
-                info.isletme = lines[0];
+            // Toplam tutar
+            const totalRegex = /(?:toplam|total|tutar|ara toplam|genel toplam|ödenecek)[\s\:]*([0-9]+[,\.]\d{2})/i;
+            const totalMatch = text.match(totalRegex);
+            if (totalMatch) {
+                info.toplamTutar = parseFloat(totalMatch[1].replace(',', '.'));
+            }
+            
+            // KDV tutarları
+            const kdvRegex = /(?:kdv|%\d{1,2})[\s\:]*([0-9]+[,\.]\d{2})/gi;
+            const kdvMatches = [...text.matchAll(kdvRegex)];
+            info.kdvTutarlari = kdvMatches.map(match => parseFloat(match[1].replace(',', '.')));
+            
+            // KDV oranları
+            const kdvRateRegex = /%(\d{1,2})/g;
+            const kdvRates = [...text.matchAll(kdvRateRegex)];
+            info.kdvOranlari = kdvRates.map(match => parseInt(match[1]));
+            
+            // Ödeme yöntemi
+            const paymentRegex = /(?:nakit|kart|kredi|pos|eft|havale)/i;
+            const paymentMatch = text.match(paymentRegex);
+            if (paymentMatch) {
+                info.odemeYontemi = paymentMatch[0];
+            }
+            
+            // Ürün detayları çıkarma
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // Ürün satırı: isim + fiyat kombinasyonu
+                if (line.match(/.*\d+[,\.]\d{2}/) && !line.match(/toplam|kdv|vergi|ara toplam/i)) {
+                    const parts = line.split(/\s+/);
+                    const lastPart = parts[parts.length - 1];
+                    if (lastPart.match(/\d+[,\.]\d{2}/)) {
+                        const price = parseFloat(lastPart.replace(',', '.'));
+                        const productName = parts.slice(0, -1).join(' ');
+                        if (productName.length > 2 && price > 0) {
+                            info.products.push({
+                                ad: productName,
+                                fiyat: price
+                            });
+                        }
+                    }
+                }
             }
             
             return info;
         }
         
-        function displayResults(info, fullText) {
+        function displayResults(receipt) {
             const results = document.getElementById('results');
             const dataDiv = document.getElementById('extractedData');
             
             let html = '';
             
-            if (info.isletme) {
-                html += `<div class="result-item"><strong>İşletme:</strong> <span>${info.isletme}</span></div>`;
+            if (receipt.isletmeAdi) {
+                html += `<div class="result-item"><strong>İşletme Adı:</strong> <span>${receipt.isletmeAdi}</span></div>`;
             }
             
-            if (info.tarih) {
-                html += `<div class="result-item"><strong>Tarih:</strong> <span>${info.tarih}</span></div>`;
+            if (receipt.vergiNo) {
+                html += `<div class="result-item"><strong>Vergi Numarası:</strong> <span>${receipt.vergiNo}</span></div>`;
             }
             
-            if (info.toplam) {
-                html += `<div class="result-item"><strong>Toplam Tutar:</strong> <span>${info.toplam}</span></div>`;
+            if (receipt.fisTargihi) {
+                html += `<div class="result-item"><strong>Fiş Tarihi:</strong> <span>${receipt.fisTargihi}</span></div>`;
             }
             
-            if (info.kdv) {
-                html += `<div class="result-item"><strong>KDV:</strong> <span>${info.kdv}</span></div>`;
+            if (receipt.fisNumarasi) {
+                html += `<div class="result-item"><strong>Fiş Numarası:</strong> <span>${receipt.fisNumarasi}</span></div>`;
             }
             
-            if (info.vergiNo) {
-                html += `<div class="result-item"><strong>Vergi No:</strong> <span>${info.vergiNo}</span></div>`;
+            if (receipt.toplamTutar) {
+                html += `<div class="result-item"><strong>Toplam Tutar:</strong> <span>${receipt.toplamTutar.toFixed(2)} TL</span></div>`;
+            }
+            
+            if (receipt.kdvOranlari.length > 0) {
+                html += `<div class="result-item"><strong>KDV Oranları:</strong> <span>%${receipt.kdvOranlari.join(', %')}</span></div>`;
+            }
+            
+            if (receipt.kdvTutarlari.length > 0) {
+                html += `<div class="result-item"><strong>KDV Tutarları:</strong> <span>${receipt.kdvTutarlari.map(t => t.toFixed(2)).join(', ')} TL</span></div>`;
+            }
+            
+            if (receipt.odemeYontemi) {
+                html += `<div class="result-item"><strong>Ödeme Yöntemi:</strong> <span>${receipt.odemeYontemi}</span></div>`;
+            }
+            
+            if (receipt.products.length > 0) {
+                html += `<div class="result-item products-section"><strong>Ürün/Hizmet Detayları:</strong>`;
+                receipt.products.forEach(product => {
+                    html += `<div class="product-item">${product.ad}: ${product.fiyat.toFixed(2)} TL</div>`;
+                });
+                html += `</div>`;
             }
             
             if (html === '') {
@@ -348,10 +545,177 @@
             results.style.display = 'block';
         }
         
-        // PWA için service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('data:text/javascript,console.log("SW loaded")');
+        function saveReceipt() {
+            if (!currentReceipt) return;
+            
+            savedReceipts.push(currentReceipt);
+            localStorage.setItem('okcReceipts', JSON.stringify(savedReceipts));
+            alert('Fiş başarıyla kaydedildi!');
         }
+        
+        function showHistory() {
+            const historySection = document.getElementById('historySection');
+            const results = document.getElementById('results');
+            
+            results.style.display = 'none';
+            historySection.style.display = 'block';
+            
+            displayHistory();
+            calculateStats();
+        }
+        
+        function displayHistory(receipts = savedReceipts) {
+            const historyList = document.getElementById('historyList');
+            
+            historyList.innerHTML = '';
+            
+            receipts.forEach((receipt, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <strong>${receipt.isletmeAdi || 'İşletme belirtilmemiş'}</strong><br>
+                    Tarih: ${receipt.fisTargihi || receipt.date}<br>
+                    Tutar: ${receipt.toplamTutar ? receipt.toplamTutar.toFixed(2) + ' TL' : 'Belirtilmemiş'}
+                `;
+                div.onclick = () => viewReceipt(receipt);
+                historyList.appendChild(div);
+            });
+        }
+        
+        function calculateStats() {
+            const statsSection = document.getElementById('statsSection');
+            const statsData = document.getElementById('statsData');
+            
+            const totalAmount = savedReceipts.reduce((sum, receipt) => sum + (receipt.toplamTutar || 0), 0);
+            const receiptCount = savedReceipts.length;
+            const avgAmount = receiptCount > 0 ? totalAmount / receiptCount : 0;
+            
+            statsData.innerHTML = `
+                <div class="stat-item"><strong>Toplam Fiş:</strong> <span>${receiptCount}</span></div>
+                <div class="stat-item"><strong>Toplam Tutar:</strong> <span>${totalAmount.toFixed(2)} TL</span></div>
+                <div class="stat-item"><strong>Ortalama Tutar:</strong> <span>${avgAmount.toFixed(2)} TL</span></div>
+            `;
+            
+            statsSection.style.display = 'block';
+        }
+        
+        function filterReceipts() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            let filtered = savedReceipts;
+            
+            if (startDate || endDate) {
+                filtered = savedReceipts.filter(receipt => {
+                    const receiptDate = receipt.fisTargihi || receipt.date;
+                    if (!receiptDate) return false;
+                    
+                    const date = new Date(receiptDate.replace(/\./g, '/'));
+                    const start = startDate ? new Date(startDate) : new Date('1900-01-01');
+                    const end = endDate ? new Date(endDate) : new Date('2100-12-31');
+                    
+                    return date >= start && date <= end;
+                });
+            }
+            
+            displayHistory(filtered);
+        }
+        
+        function exportToExcel() {
+            if (!currentReceipt) return;
+            
+            const workbook = XLSX.utils.book_new();
+            
+            // Ana bilgiler sayfası
+            const mainData = [
+                ['Fiş Bilgileri', ''],
+                ['İşletme Adı', currentReceipt.isletmeAdi || ''],
+                ['Vergi Numarası', currentReceipt.vergiNo || ''],
+                ['Fiş Tarihi', currentReceipt.fisTargihi || ''],
+                ['Fiş Numarası', currentReceipt.fisNumarasi || ''],
+                ['Toplam Tutar', currentReceipt.toplamTutar ? currentReceipt.toplamTutar.toFixed(2) + ' TL' : ''],
+                ['KDV Oranları', currentReceipt.kdvOranlari.join(', ') + '%'],
+                ['KDV Tutarları', currentReceipt.kdvTutarlari.map(t => t.toFixed(2)).join(', ') + ' TL'],
+                ['Ödeme Yöntemi', currentReceipt.odemeYontemi || '']
+            ];
+            
+            const mainSheet = XLSX.utils.aoa_to_sheet(mainData);
+            XLSX.utils.book_append_sheet(workbook, mainSheet, 'Fiş Bilgileri');
+            
+            // Ürünler sayfası
+            if (currentReceipt.products.length > 0) {
+                const productData = [['Ürün/Hizmet', 'Fiyat (TL)']];
+                currentReceipt.products.forEach(product => {
+                    productData.push([product.ad, product.fiyat.toFixed(2)]);
+                });
+                
+                const productSheet = XLSX.utils.aoa_to_sheet(productData);
+                XLSX.utils.book_append_sheet(workbook, productSheet, 'Ürünler');
+            }
+            
+            const fileName = `fis_${currentReceipt.fisNumarasi || Date.now()}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        }
+        
+        function exportAllToExcel() {
+            if (savedReceipts.length === 0) {
+                alert('Kaydedilmiş fiş bulunamadı!');
+                return;
+            }
+            
+            const workbook = XLSX.utils.book_new();
+            
+            // Tüm fişler özet sayfası
+            const summaryData = [
+                ['İşletme Adı', 'Vergi No', 'Tarih', 'Fiş No', 'Toplam Tutar', 'KDV', 'Ödeme Yöntemi']
+            ];
+            
+            savedReceipts.forEach(receipt => {
+                summaryData.push([
+                    receipt.isletmeAdi || '',
+                    receipt.vergiNo || '',
+                    receipt.fisTargihi || receipt.date,
+                    receipt.fisNumarasi || '',
+                    receipt.toplamTutar ? receipt.toplamTutar.toFixed(2) : '',
+                    receipt.kdvTutarlari.map(t => t.toFixed(2)).join(', '),
+                    receipt.odemeYontemi || ''
+                ]);
+            });
+            
+            const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(workbook, summarySheet, 'Tüm Fişler');
+            
+            // İstatistikler sayfası
+            const totalAmount = savedReceipts.reduce((sum, receipt) => sum + (receipt.toplamTutar || 0), 0);
+            const receiptCount = savedReceipts.length;
+            const avgAmount = receiptCount > 0 ? totalAmount / receiptCount : 0;
+            
+            const statsData = [
+                ['İstatistikler', ''],
+                ['Toplam Fiş Sayısı', receiptCount],
+                ['Toplam Tutar', totalAmount.toFixed(2) + ' TL'],
+                ['Ortalama Fiş Tutarı', avgAmount.toFixed(2) + ' TL']
+            ];
+            
+            const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+            XLSX.utils.book_append_sheet(workbook, statsSheet, 'İstatistikler');
+            
+            const fileName = `tum_fisler_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        }
+        
+        function viewReceipt(receipt) {
+            currentReceipt = receipt;
+            displayResults(receipt);
+            document.getElementById('historySection').style.display = 'none';
+        }
+        
+        // Sayfa yüklendiğinde geçmişi kontrol et
+        window.onload = function() {
+            if (savedReceipts.length > 0) {
+                console.log(`${savedReceipts.length} fiş kaydı bulundu.`);
+            }
+        };
     </script>
 </body>
 </html>

@@ -1,0 +1,128 @@
+{
+  "name": "Fiş Tarayıcı - Receipt Scanner",
+  "short_name": "Fiş Tarayıcı",
+  "description": "Yazarkasa fişlerini tarayıp Excel raporu oluşturan akıllı uygulama",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "tr",
+  "categories": ["business", "productivity", "finance"],
+  "screenshots": [
+    {
+      "src": "/assets/images/screenshot1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/assets/images/screenshot2.png", 
+      "sizes": "720x540",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/assets/images/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-96.png",
+      "sizes": "96x96", 
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/images/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Fiş Tara",
+      "short_name": "Tara",
+      "description": "Yeni fiş taramaya başla",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/assets/images/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Geçmiş",
+      "short_name": "Geçmiş", 
+      "description": "Taranmış fişleri görüntüle",
+      "url": "/history",
+      "icons": [
+        {
+          "src": "/assets/images/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Rapor",
+      "short_name": "Rapor",
+      "description": "Excel raporu oluştur",
+      "url": "/export", 
+      "icons": [
+        {
+          "src": "/assets/images/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "receipt",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
+}

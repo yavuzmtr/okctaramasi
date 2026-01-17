@@ -1,7 +1,7 @@
 import type { ReceiptScanResult, ReceiptItem } from '@/types/receipt';
 import { Platform } from 'react-native';
 import { GeminiOCRService } from './geminiOCR';
-import { GEMINI_CONFIG, isGeminiConfigured } from '../config/gemini.config';
+import { GEMINI_CONFIG, isGeminiConfigured } from '../config/gemini';
 
 // Dynamic import for Tesseract.js (web only)
 let TesseractLib: any = null;

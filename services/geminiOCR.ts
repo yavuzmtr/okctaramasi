@@ -88,38 +88,55 @@ export class GeminiOCRService {
    * Gemini için prompt oluşturur (Türkçe fiş analizi)
    */
   private buildPrompt(): string {
-    return `Bu fişten aşağıdaki verileri Türkçe olarak JSON formatında çıkar:
+    return `Sen bir Türk yazarkasa fiş analizcisiniz. Bu fişi Excel muhasebe raporu için analiz et.
 
-1. **storeName**: Fişteki mağaza/şirket adı. Eğer bulunamazsa 'Bilinmeyen Mağaza' kullan.
+**ÇOK ÖNEMLİ: Aşağıdaki TÜM BİLGİLERİ JSON formatında döndür:**
 
-2. **date**: Fiş tarihi (YYYY-MM-DD formatında, örn: 2025-01-24). Eğer tarih bulunamazsa bugünün tarihini kullan.
+1. **storeName**: Mağaza/Şirket adı (ör: "HAKMAR", "ŞEN KASAP", "ARA COFFEE")
 
-3. **items**: Fişdeki ürünlerin listesi. Her ürün için:
-   - name: Ürün adı (string)
-   - price: Ürün fiyatı (number, TL cinsinden)
-   - quantity: Miktar (number, varsayılan 1)
+2. **category**: İşletme kategorisi. SADECE şunlardan biri:
+   - "Market" (süpermarket, bakkal, market)
+   - "Kasap" (et, kasap, kurban)
+   - "Yemek" (restoran, lokanta, döner, kebap, lahmacun)
+   - "Cafe" (kafe, kahve, coffee, pastane)
+   - "Eczane" (eczane, pharmacy)
+   - "Market/Tatlı" (tatlıcı, börekçi, kuruyemiş)
+   - "Market/Manav" (manav, sebze, meyve)
+   - "Unlu Mamül" (fırın, ekmek, unlu mamul)
+   - "Diğer" (belirsiz)
 
-4. **totalAmount**: Fişin KDV dahil toplam tutarı (number, TL cinsinden).
+3. **date**: Fiş tarihi (YYYY-MM-DD formatı, ör: "2026-01-17")
 
-5. **confidence**: Okunan verilerin güvenilirlik skoru (0.0 - 1.0 arası).
+4. **receiptNo**: Fiş numarası (ör: "0007", "48"). Bulamazsan boş string.
 
-**ÖNEMLI KURALLAR:**
-- Tüm fiyatları sayısal değer olarak ver (örn: 152.75)
-- Eğer bir alan bulunamazsa boş string veya 0 kullan
-- Ürün listesi boşsa en az 1 boş ürün ekle
-- Sadece JSON döndür, başka açıklama yapma
+5. **totalAmount**: TOPLAM TUTAR (KDV DAHİL) - En büyük sayı genelde bu (ör: 346.00)
 
-Örnek çıktı formatı:
+6. **vatRate**: KDV ORANI - Türkiye'de sadece %1, %10 veya %20 olur. Fişte "KDV %" veya "TOPKDV" alanına bak.
+   - Yemek/restoran genelde %10
+   - Market/süpermarket genelde %1 veya %10
+   - Diğer %20
+
+7. **vatAmount**: KDV TUTARI - Fişte "TOPKDV", "KDV" veya benzeri alan (ör: 31.45)
+   - Eğer bulamazsan: totalAmount * (vatRate / (100 + vatRate)) formülüyle hesapla
+
+8. **netAmount**: MATRAH (KDV HARİÇ TUTAR) = totalAmount - vatAmount
+
+9. **confidence**: Güvenilirlik (0.0-1.0). Tüm bilgiler netse 0.95, belirsizlik varsa 0.6-0.8
+
+**ÖRNEK ÇIKTI:**
 {
-  "storeName": "MİGROS",
-  "date": "2025-01-15",
-  "items": [
-    {"name": "Süt", "price": 35.50, "quantity": 2},
-    {"name": "Ekmek", "price": 8.00, "quantity": 1}
-  ],
-  "totalAmount": 79.00,
+  "storeName": "AŞŞAN GİDA A.Ş",
+  "category": "Yemek",
+  "date": "2026-01-02",
+  "receiptNo": "0007",
+  "totalAmount": 346.00,
+  "vatRate": 10,
+  "vatAmount": 31.45,
+  "netAmount": 314.55,
   "confidence": 0.95
-}`;
+}
+
+**SADECE JSON DÖNDÜR, BAŞKA BİR ŞEY YAZMA!**`;
   }
 
   /**
@@ -133,33 +150,40 @@ export class GeminiOCRService {
           type: "STRING",
           description: "Mağaza/Şirket adı"
         },
+        category: {
+          type: "STRING",
+          description: "Kategori: Market, Kasap, Yemek, Cafe, Eczane, Market/Tatlı, Market/Manav, Unlu Mamül, Diğer"
+        },
         date: {
           type: "STRING",
           description: "Fiş tarihi (YYYY-MM-DD formatında)"
         },
-        items: {
-          type: "ARRAY",
-          description: "Ürün listesi",
-          items: {
-            type: "OBJECT",
-            properties: {
-              name: { type: "STRING", description: "Ürün adı" },
-              price: { type: "NUMBER", description: "Ürün fiyatı (TL)" },
-              quantity: { type: "NUMBER", description: "Miktar" }
-            },
-            required: ["name", "price", "quantity"]
-          }
+        receiptNo: {
+          type: "STRING",
+          description: "Fiş numarası"
         },
         totalAmount: {
           type: "NUMBER",
           description: "Toplam tutar (KDV Dahil)"
+        },
+        vatRate: {
+          type: "NUMBER",
+          description: "KDV oranı (%1, %10, veya %20)"
+        },
+        vatAmount: {
+          type: "NUMBER",
+          description: "KDV tutarı (TL)"
+        },
+        netAmount: {
+          type: "NUMBER",
+          description: "Matrah (KDV hariç tutar)"
         },
         confidence: {
           type: "NUMBER",
           description: "Güvenilirlik skoru (0-1)"
         }
       },
-      required: ["storeName", "date", "items", "totalAmount", "confidence"]
+      required: ["storeName", "category", "date", "receiptNo", "totalAmount", "vatRate", "vatAmount", "netAmount", "confidence"]
     };
   }
 
@@ -167,21 +191,22 @@ export class GeminiOCRService {
    * Gemini çıktısını ReceiptScanResult formatına dönüştürür
    */
   private convertToReceiptResult(data: any): ReceiptScanResult {
-    // Boş ürün listesini düzelt
-    const items = data.items && data.items.length > 0
-      ? data.items.map((item: any) => ({
-          name: item.name || '',
-          price: Number(item.price) || 0,
-          quantity: Number(item.quantity) || 1
-        }))
-      : [{ name: '', price: 0, quantity: 1 }];
+    const totalAmount = Number(data.totalAmount) || 0;
+    const vatRate = Number(data.vatRate) || 10;
+    const vatAmount = Number(data.vatAmount) || (totalAmount * vatRate / (100 + vatRate));
+    const netAmount = Number(data.netAmount) || (totalAmount - vatAmount);
 
     return {
-      storeName: data.storeName || 'Bilinmeyen Mağaza',
+      storeName: data.storeName || 'Bilinmeyen İşletme',
+      category: data.category || 'Diğer',
       date: data.date || new Date().toISOString().split('T')[0],
-      items,
-      totalAmount: Number(data.totalAmount) || 0,
-      confidence: Number(data.confidence) || 0.5
+      receiptNo: data.receiptNo || '',
+      items: [{ name: '-', price: totalAmount, quantity: 1 }], // Dummy data
+      totalAmount,
+      vatRate,
+      vatAmount,
+      netAmount,
+      confidence: Number(data.confidence) || 0.7
     };
   }
 }

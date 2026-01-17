@@ -63,6 +63,9 @@ export default function ScanScreen() {
 
     try {
       setIsScanning(true);
+      
+      // Kullanıcıya yükleniyor mesajı göster
+      Alert.alert('İşleniyor', 'Fiş Gemini AI ile analiz ediliyor...', []);
 
       let imageData: string;
       
@@ -86,9 +89,13 @@ export default function ScanScreen() {
         return handleFileUpload();
       }
 
+      console.log('📸 Fotoğraf çekildi, OCR başlatılıyor...');
+
       // Process OCR
       const extractedData = await ocrService.extractReceiptData(imageData);
       
+      console.log('✅ OCR tamamlandı:', extractedData);
+
       // Navigate to edit screen
       router.push({
         pathname: '/edit-receipt',
